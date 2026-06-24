@@ -80,3 +80,7 @@ coverage.xml
 
 # Cache
 .cache/
+
+# Backup files
+uploads/
+processed/

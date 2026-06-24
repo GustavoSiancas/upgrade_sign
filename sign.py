@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
@@ -9,6 +12,13 @@ class App:
     def __init__(self, root):
         self.root = root
         self.root.title("Remover Fondo Firma")
+
+        # Crear carpetas automáticamente
+        self.uploads_dir = Path("uploads")
+        self.processed_dir = Path("processed")
+
+        self.uploads_dir.mkdir(exist_ok=True)
+        self.processed_dir.mkdir(exist_ok=True)
 
         self.original_label = tk.Label(root, text="Original")
         self.original_label.grid(row=0, column=0, padx=10, pady=10)
@@ -40,6 +50,13 @@ class App:
         if not path:
             return
 
+        # Nombre del archivo
+        filename = os.path.basename(path)
+
+        # Guardar copia del original en uploads
+        upload_path = self.uploads_dir / filename
+        Image.open(path).save(upload_path)
+
         # Mostrar original
         original = Image.open(path)
         original.thumbnail((350, 250))
@@ -47,7 +64,7 @@ class App:
         self.original_photo = ImageTk.PhotoImage(original)
         self.original_img_label.config(image=self.original_photo)
 
-        # OpenCV
+        # Leer imagen con OpenCV
         img = cv2.imread(path)
 
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -68,6 +85,7 @@ class App:
             kernel
         )
 
+        # Crear PNG con transparencia
         result = np.zeros(
             (thresh.shape[0], thresh.shape[1], 4),
             dtype=np.uint8
@@ -80,7 +98,7 @@ class App:
 
         self.result_rgba = result
 
-        # Crear fondo gris para visualizar transparencia
+        # Vista previa sobre fondo gris
         preview = np.full(
             (result.shape[0], result.shape[1], 3),
             220,
@@ -101,7 +119,16 @@ class App:
         self.result_photo = ImageTk.PhotoImage(preview)
         self.result_img_label.config(image=self.result_photo)
 
-        cv2.imwrite("firma_transparente.png", result)
+        # Guardar resultado en processed
+        output_path = (
+            self.processed_dir /
+            f"{Path(filename).stem}_transparent.png"
+        )
+
+        cv2.imwrite(str(output_path), result)
+
+        print(f"Original guardada en: {upload_path}")
+        print(f"Procesada guardada en: {output_path}")
 
 
 root = tk.Tk()
