@@ -1,23 +1,27 @@
+# DNI
+
 PHOTO_DNI = {
-    "x": 689,
+    "x": 688,
     "y": 257,
-    "width": 229,
-    "height": 305
+    "width": 230,
+    "height": 306
 }
 
 SIGNATURE_DNI = {
-    "x": 424,
-    "y": 298,
-    "width": 215,
-    "height": 180
+    "x": 434,
+    "y": 279,
+    "width": 200,
+    "height": 160
 }
 
 TEXT_DNI = {
-    "dni": (425, 508),
-    "nombres": (77, 420),
-    "apellidos": (76, 323),
-    "registro": (77, 508)
+    "dni": (428, 506),
+    "nombres": (83, 415),
+    "apellidos": (81, 318),
+    "registro": (83, 505)
 }
+
+# CARNET DE EXTRANJERIA
 
 PHOTO_CE = {
     "x": 687,
@@ -41,11 +45,15 @@ TEXT_CE = {
     "registro": (84, 504)
 }   
 
+# QR BACK
+
 QR = {
     "x": 408,
     "y": 79,
     "width": 180,
     "height": 180
 }
+
+# TAMAÑO DE LETRA
 
 FONT_SIZE = 30
