@@ -1,5 +1,3 @@
-from tkinter.font import names
-
 from fastapi import FastAPI
 from pydantic import BaseModel
 from pathlib import Path
