@@ -21,6 +21,20 @@ TEXT_DNI = {
     "registro": (83, 505)
 }
 
+APELLIDOS_BOX_DNI = {
+    "x": 81,
+    "y": 318,
+    "width": 367,
+    "height": 57
+}
+
+NOMBRES_BOX_DNI = {
+    "x": 83,
+    "y": 415,
+    "width": 367,
+    "height": 57
+}
+
 # CARNET DE EXTRANJERIA
 
 PHOTO_CE = {
@@ -29,7 +43,6 @@ PHOTO_CE = {
     "width": 230,
     "height": 306
 }
-
 
 SIGNATURE_CE = {
     "x": 435,
@@ -43,7 +56,21 @@ TEXT_CE = {
     "nombres": (84, 414),
     "apellidos": (81, 316),
     "registro": (84, 504)
-}   
+}
+
+APELLIDOS_BOX_CE = {
+    "x": 81,
+    "y": 316,
+    "width": 367,
+    "height": 57
+}
+
+NOMBRES_BOX_CE = {
+    "x": 84,
+    "y": 414,
+    "width": 367,
+    "height": 57
+}
 
 # QR BACK
 
@@ -57,3 +84,6 @@ QR = {
 # TAMAÑO DE LETRA
 
 FONT_SIZE = 30
+
+MAX_FONT_SIZE_TEXT = 30
+MIN_FONT_SIZE_TEXT = 12
