@@ -2,15 +2,15 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from pathlib import Path
 from carnet import carnetService
-
-
+from pdf import pdfService
 
 from sign.upgradeSign import upgrade_sign
 from sign.upgradeSignv import upgrade_sign_v5
 from services.imageService import resize_image, resize_signature
 from services.cloudinaryService import (
     download_image,
-    upload_image
+    upload_image,
+    upload_pdf
 )
 
 app = FastAPI(
@@ -136,15 +136,22 @@ def generate_carnet(request: CarnetRequest):
         image_path=downloaded_photo
     )
 
-    generated_carnet_url = upload_image(
-        generated_carnet_path,
-        folder="generated-carnets"
-    )
-
     generated_back_carnet_path = carnet_service.generate_back_carnet(
         dni=request.dni,
         url_qr=request.url,
         output_folder="output"
+    )
+
+    generated_pdf_path = pdfService.PdfService.generate_pdf(
+        front_image_path=generated_carnet_path,
+        back_image_path=generated_back_carnet_path,
+        output_folder="output",
+        filename=f"{request.dni}.pdf"
+    )
+
+    generated_carnet_url = upload_image(
+        generated_carnet_path,
+        folder="generated-carnets"
     )
 
     generated_back_carnet_url = upload_image(
@@ -152,7 +159,13 @@ def generate_carnet(request: CarnetRequest):
         folder="generated-back-carnets"
     )
 
+    generated_pdf_url = upload_pdf(
+        generated_pdf_path,
+        folder="generated-pdfs"
+    )
+
     return {
         "carnetUrl": generated_carnet_url,
-        "backCarnetUrl": generated_back_carnet_url
+        "backCarnetUrl": generated_back_carnet_url,
+        "pdfUrl": generated_pdf_url
     }

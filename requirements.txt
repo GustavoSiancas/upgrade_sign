@@ -7,3 +7,4 @@ Pillow==11.3.0
 cloudinary
 requests
 qrcode
+reportlab
