@@ -32,6 +32,7 @@ class CarnetRequest(BaseModel):
     names: str
     lastNames: str
     nro_registro: str
+    url: str
 
 @app.post("/upgrade-sign")
 def upgrade_signature(request: SignRequest):
@@ -140,6 +141,18 @@ def generate_carnet(request: CarnetRequest):
         folder="generated-carnets"
     )
 
+    generated_back_carnet_path = carnet_service.generate_back_carnet(
+        dni=request.dni,
+        url_qr=request.url,
+        output_folder="output"
+    )
+
+    generated_back_carnet_url = upload_image(
+        generated_back_carnet_path,
+        folder="generated-back-carnets"
+    )
+
     return {
-        "carnetUrl": generated_carnet_url
+        "carnetUrl": generated_carnet_url,
+        "backCarnetUrl": generated_back_carnet_url
     }

@@ -22,7 +22,7 @@ PHOTO = {
 
 
 SIGNATURE = {
-    "x": 400,
+    "x": 410,
     "y": 289,
     "width": 220,
     "height": 145
@@ -33,6 +33,13 @@ TEXT = {
     "nombres": (77, 420),
     "apellidos": (76, 323),
     "registro": (77, 508)
+}
+
+QR = {
+    "x": 410,
+    "y": 60,
+    "width": 190,
+    "height": 190
 }
 
 FONT_SIZE = 25
