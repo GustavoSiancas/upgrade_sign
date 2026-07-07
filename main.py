@@ -1,6 +1,10 @@
+from tkinter.font import names
+
 from fastapi import FastAPI
 from pydantic import BaseModel
 from pathlib import Path
+from carnet import carnetService
+
 
 
 from sign.upgradeSign import upgrade_sign
@@ -22,6 +26,14 @@ class SignRequest(BaseModel):
 
 class ImageRequest(BaseModel):
     imageUrl: str
+
+class CarnetRequest(BaseModel):
+    imageUrl: str
+    signatureUrl: str
+    dni: str
+    names: str
+    lastNames: str
+    nro_registro: str
 
 @app.post("/upgrade-sign")
 def upgrade_signature(request: SignRequest):
@@ -102,4 +114,34 @@ def resize_photo(request: ImageRequest):
 
     return {
         "resizedUrl": resized_url
+    }
+
+@app.post("/carnet")
+def generate_carnet(request: CarnetRequest):
+    downloaded_photo = download_image(
+        request.imageUrl
+    )
+
+    downloaded_signature = download_image(
+        request.signatureUrl
+    )
+
+    carnet_service = carnetService.CarnetService()
+
+    generated_carnet_path = carnet_service.generate(
+        dni=request.dni,
+        nombres=request.names,
+        apellidos=request.lastNames,
+        nro_registro=request.nro_registro,
+        firma_path=downloaded_signature,
+        image_path=downloaded_photo
+    )
+
+    generated_carnet_url = upload_image(
+        generated_carnet_path,
+        folder="generated-carnets"
+    )
+
+    return {
+        "carnetUrl": generated_carnet_url
     }

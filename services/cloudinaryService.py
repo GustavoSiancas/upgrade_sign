@@ -24,15 +24,18 @@ def download_image(image_url: str, download_folder: str = "uploads") -> str:
 
 
 def upload_image(file_path: str, folder: str = "signatures") -> str:
-    filename = Path(file_path).stem
+    path = Path(file_path)
 
-    result = cloudinary.uploader.upload(
-        file_path,
-        folder=folder,
-        public_id=filename,
-        overwrite=True,
-        resource_type="image"
-    )
-
-    return result["secure_url"]
+    try:
+        result = cloudinary.uploader.upload(
+            str(path),
+            folder=folder,
+            public_id=path.stem,
+            overwrite=True,
+            resource_type="image"
+        )
+        return result["secure_url"]
+    finally:
+        if path.exists():
+            path.unlink()
 
