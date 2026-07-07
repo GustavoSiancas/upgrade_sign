@@ -1,5 +1,5 @@
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageOps
 
 
 def resize_signature(
@@ -35,6 +35,35 @@ def resize_signature(
 
     image = image.crop(
         (left, top, right, bottom)
+    )
+
+    filename = Path(input_path).stem
+
+    output_path = str(
+        Path(output_folder) /
+        f"{filename}_{width}x{height}.png"
+    )
+
+    image.save(output_path)
+
+    return output_path
+
+def resize_image(
+    input_path: str,
+    width: int,
+    height: int,
+    output_folder: str = "processed"
+) -> str:
+
+    Path(output_folder).mkdir(exist_ok=True)
+
+    image = Image.open(input_path).convert("RGBA")
+
+    image = ImageOps.fit(
+        image,
+        (width, height),
+        method=Image.Resampling.LANCZOS,
+        centering=(0.5, 0.5)  # Centro horizontal y vertical
     )
 
     filename = Path(input_path).stem

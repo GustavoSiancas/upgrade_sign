@@ -35,3 +35,4 @@ def upload_image(file_path: str, folder: str = "signatures") -> str:
     )
 
     return result["secure_url"]
+
