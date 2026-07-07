@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from pathlib import Path
 from carnet import carnetService
 from pdf import pdfService
+from enum import Enum
 
 from sign.upgradeSign import upgrade_sign
 from sign.upgradeSignv import upgrade_sign_v5
@@ -25,10 +26,15 @@ class SignRequest(BaseModel):
 class ImageRequest(BaseModel):
     imageUrl: str
 
+class DocumentType(str, Enum):
+    DNI = "DNI"
+    CE = "CE"
+
 class CarnetRequest(BaseModel):
     imageUrl: str
     signatureUrl: str
-    dni: str
+    number_document: str
+    type_document: DocumentType
     names: str
     lastNames: str
     nro_registro: str
@@ -127,17 +133,36 @@ def generate_carnet(request: CarnetRequest):
 
     carnet_service = carnetService.CarnetService()
 
-    generated_carnet_path = carnet_service.generate(
-        dni=request.dni,
+    generated_carnet_path=""
+
+    if request.type_document == DocumentType.DNI:
+        generated_carnet_path = carnet_service.generate(
+        dni=request.number_document,
         nombres=request.names,
         apellidos=request.lastNames,
         nro_registro=request.nro_registro,
         firma_path=downloaded_signature,
         image_path=downloaded_photo
-    )
+    ) 
+    elif request.type_document == DocumentType.CE:
+        generated_carnet_path = carnet_service.generate_ce(
+        ce=request.number_document,
+        nombres=request.names,
+        apellidos=request.lastNames,
+        nro_registro=request.nro_registro,
+        firma_path=downloaded_signature,
+        image_path=downloaded_photo
+    ) 
+    else :
+        return {
+            "error": "Tipo de documento no soportado"
+        }
+
+
+    
 
     generated_back_carnet_path = carnet_service.generate_back_carnet(
-        dni=request.dni,
+        dni=request.number_document,
         url_qr=request.url,
         output_folder="output"
     )
@@ -146,7 +171,7 @@ def generate_carnet(request: CarnetRequest):
         front_image_path=generated_carnet_path,
         back_image_path=generated_back_carnet_path,
         output_folder="output",
-        filename=f"{request.dni}.pdf"
+        filename=f"{request.number_document}.pdf"
     )
 
     generated_carnet_url = upload_image(
