@@ -10,7 +10,7 @@ from qr.qrService import QrService
 from .carnetConfig import (
     PHOTO_DNI, SIGNATURE_DNI, TEXT_DNI, APELLIDOS_BOX_DNI, NOMBRES_BOX_DNI,
     PHOTO_CE, SIGNATURE_CE, TEXT_CE, APELLIDOS_BOX_CE, NOMBRES_BOX_CE,
-    FONT_SIZE, MAX_FONT_SIZE_TEXT, MIN_FONT_SIZE_TEXT, QR
+    FONT_SIZE, MAX_FONT_SIZE_TEXT, MIN_FONT_SIZE_TEXT, QR, FONT_SIZE_NUMBER
 )
 
 
@@ -26,20 +26,26 @@ class CarnetService:
                 self.FONT_PATH,
                 FONT_SIZE
             )
+            self.font_number = ImageFont.truetype(
+                self.FONT_PATH,
+                FONT_SIZE_NUMBER
+            )
         except:
             self.font = ImageFont.load_default()
+            self.font_number = ImageFont.load_default()
 
     def _resize_cover(
         self,
         image: Image.Image,
         width: int,
         height: int
-    ) -> Image.Image:
+        ) -> Image.Image:
 
         return ImageOps.fit(
             image,
             (width, height),
             method=Image.Resampling.LANCZOS,
+
             centering=(0.5, 0.5)
         )
 
@@ -211,14 +217,14 @@ class CarnetService:
             TEXT_DNI["dni"],
             dni,
             fill="black",
-            font=self.font
+            font=self.font_number
         )
 
         draw.text(
             TEXT_DNI["registro"],
             nro_registro,
             fill="black",
-            font=self.font
+            font=self.font_number
         )
 
         # Apellidos y nombres: largo variable, se autoajustan a la caja
@@ -315,14 +321,14 @@ class CarnetService:
             TEXT_CE["ce"],
             ce,
             fill="black",
-            font=self.font
+            font=self.font_number
         )
 
         draw.text(
             TEXT_CE["registro"],
             nro_registro,
             fill="black",
-            font=self.font
+            font=self.font_number
         )
 
         self._draw_text_in_box(

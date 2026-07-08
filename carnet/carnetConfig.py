@@ -9,7 +9,7 @@ PHOTO_DNI = {
 
 SIGNATURE_DNI = {
     "x": 434,
-    "y": 279,
+    "y": 240,
     "width": 200,
     "height": 160
 }
@@ -46,7 +46,7 @@ PHOTO_CE = {
 
 SIGNATURE_CE = {
     "x": 435,
-    "y": 281,
+    "y": 242,
     "width": 200,
     "height": 160
 }
@@ -84,6 +84,8 @@ QR = {
 # TAMAÑO DE LETRA
 
 FONT_SIZE = 30
+
+FONT_SIZE_NUMBER=40
 
 MAX_FONT_SIZE_TEXT = 30
 MIN_FONT_SIZE_TEXT = 12
