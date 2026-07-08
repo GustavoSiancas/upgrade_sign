@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from pathlib import Path
 from carnet import carnetService
@@ -39,6 +40,14 @@ class CarnetRequest(BaseModel):
     lastNames: str
     nro_registro: str
     url: str
+
+class CarnetRequestPreview(BaseModel):
+    imageUrl: str
+    signatureUrl: str
+    number_document: str
+    type_document: DocumentType
+    names: str
+    lastNames: str
 
 @app.post("/upgrade-sign")
 def upgrade_signature(request: SignRequest):
@@ -156,10 +165,7 @@ def generate_carnet(request: CarnetRequest):
     else :
         return {
             "error": "Tipo de documento no soportado"
-        }
-
-
-    
+        }    
 
     generated_back_carnet_path = carnet_service.generate_back_carnet(
         dni=request.number_document,
@@ -194,3 +200,47 @@ def generate_carnet(request: CarnetRequest):
         "backCarnetUrl": generated_back_carnet_url,
         "pdfUrl": generated_pdf_url
     }
+
+@app.post("/carnet/preview")
+def generate_carnet_preview(request: CarnetRequestPreview):
+    downloaded_photo = download_image(
+        request.imageUrl
+    )
+
+    downloaded_signature = download_image(
+        request.signatureUrl
+    )
+
+    carnet_service = carnetService.CarnetService()
+
+    generated_carnet_path=""
+
+    if request.type_document == DocumentType.DNI:
+        generated_carnet_path = carnet_service.generate(
+        dni=request.number_document,
+        nombres=request.names,
+        apellidos=request.lastNames,
+        nro_registro="00000",
+        firma_path=downloaded_signature,
+        image_path=downloaded_photo
+    ) 
+    elif request.type_document == DocumentType.CE:
+        generated_carnet_path = carnet_service.generate_ce(
+        ce=request.number_document,
+        nombres=request.names,
+        apellidos=request.lastNames,
+        nro_registro="00000",
+        firma_path=downloaded_signature,
+        image_path=downloaded_photo
+    ) 
+    else :
+        return {
+            "error": "Tipo de documento no soportado"
+        }
+
+
+    return FileResponse(
+        path=generated_carnet_path,
+        media_type="image/png",
+        filename="preview.png"
+    )
