@@ -62,8 +62,8 @@ def upgrade_signature(request: SignRequest):
 
     resized= resize_image(
         processed_file,
-        425,
-        282
+        600,
+        480
     )
 
     processed_url = upload_image(
@@ -85,8 +85,8 @@ def resize_signature(request: ImageRequest):
 
     resized = resize_image(
         path,
-        425, 
-        282
+        600, 
+        480
     )
 
     resized_url = upload_image(
@@ -108,8 +108,8 @@ def resize_photo(request: ImageRequest):
 
     resized = resize_image(
         path,
-        532,
-        709
+        690,
+        918
     )
 
     resized_url = upload_image(
