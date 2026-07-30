@@ -1,11 +1,16 @@
-from pathlib import Path
+from enum import Enum
+import base64
 
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 from PIL import ImageOps
+from io import BytesIO
 
-from qr.qrService import QrService
+from pydantic import BaseModel
+
+from services.qrService import QrService
+from .pdfService import PdfService
 
 from .carnetConfig import (
     PHOTO_DNI, SIGNATURE_DNI, TEXT_DNI, APELLIDOS_BOX_DNI, NOMBRES_BOX_DNI,
@@ -13,6 +18,20 @@ from .carnetConfig import (
     FONT_SIZE, MAX_FONT_SIZE_TEXT, MIN_FONT_SIZE_TEXT, QR, FONT_SIZE_NUMBER
 )
 
+class DocumentType(str, Enum):
+    DNI = "DNI"
+    CE = "CE"
+
+class FileResponse(BaseModel):
+    filename: str
+    contentType: str
+    data: str
+
+
+class CarnetResponse(BaseModel):
+    carnet: FileResponse
+    backCarnet: FileResponse
+    pdf: FileResponse
 
 class CarnetService:
     TEMPLATE_DNI_PATH = "assets/dni_template.png"
@@ -144,18 +163,16 @@ class CarnetService:
             font=font
         )
 
+
     def generate(
         self,
         dni: str,
         nombres: str,
         apellidos: str,
         nro_registro: str,
-        firma_path: str,
-        image_path: str,
-        output_folder: str = "output"
-    ) -> str:
-
-        Path(output_folder).mkdir(exist_ok=True)
+        firma_bytes: bytes,
+        image_bytes: bytes
+    ) -> bytes:
 
         carnet = Image.open(
             self.TEMPLATE_DNI_PATH
@@ -163,12 +180,8 @@ class CarnetService:
 
         draw = ImageDraw.Draw(carnet)
 
-        # ======================
-        # FOTO
-        # ======================
-
         foto = Image.open(
-            image_path
+            BytesIO(image_bytes)
         ).convert("RGBA")
 
         foto = self._resize_cover(
@@ -185,12 +198,8 @@ class CarnetService:
             )
         )
 
-        # ======================
-        # FIRMA
-        # ======================
-
         firma = Image.open(
-            firma_path
+            BytesIO(firma_bytes)
         ).convert("RGBA")
 
         firma = self._resize_cover(
@@ -208,11 +217,6 @@ class CarnetService:
             firma
         )
 
-        # ======================
-        # TEXTOS
-        # ======================
-
-        # DNI y registro: campos cortos y fijos, fuente estándar
         draw.text(
             TEXT_DNI["dni"],
             dni,
@@ -227,7 +231,6 @@ class CarnetService:
             font=self.font_number
         )
 
-        # Apellidos y nombres: largo variable, se autoajustan a la caja
         self._draw_text_in_box(
             draw,
             apellidos,
@@ -240,14 +243,14 @@ class CarnetService:
             NOMBRES_BOX_DNI
         )
 
-        output = str(
-            Path(output_folder) /
-            f"{dni}.png"
+        output = BytesIO()
+
+        carnet.save(
+            output,
+            format="PNG"
         )
 
-        carnet.save(output)
-
-        return output
+        return output.getvalue()
 
     def generate_ce(
         self,
@@ -255,12 +258,9 @@ class CarnetService:
         nombres: str,
         apellidos: str,
         nro_registro: str,
-        firma_path: str,
-        image_path: str,
-        output_folder: str = "output"
-    ) -> str:
-
-        Path(output_folder).mkdir(exist_ok=True)
+        firma_bytes: bytes,
+        image_bytes: bytes
+    ) -> bytes:
 
         carnet = Image.open(
             self.TEMPLATE_CE_PATH
@@ -268,12 +268,8 @@ class CarnetService:
 
         draw = ImageDraw.Draw(carnet)
 
-        # ======================
-        # FOTO
-        # ======================
-
         foto = Image.open(
-            image_path
+            BytesIO(image_bytes)
         ).convert("RGBA")
 
         foto = self._resize_cover(
@@ -290,12 +286,8 @@ class CarnetService:
             )
         )
 
-        # ======================
-        # FIRMA
-        # ======================
-
         firma = Image.open(
-            firma_path
+            BytesIO(firma_bytes)
         ).convert("RGBA")
 
         firma = self._resize_cover(
@@ -312,10 +304,6 @@ class CarnetService:
             ),
             firma
         )
-
-        # ======================
-        # TEXTOS
-        # ======================
 
         draw.text(
             TEXT_CE["ce"],
@@ -343,38 +331,32 @@ class CarnetService:
             NOMBRES_BOX_CE
         )
 
-        output = str(
-            Path(output_folder) /
-            f"{ce}.png"
+        output = BytesIO()
+
+        carnet.save(
+            output,
+            format="PNG"
         )
 
-        carnet.save(output)
+        return output.getvalue()
 
-        return output
 
     def generate_back_carnet(
-        self,
-        dni: str,
-        url_qr: str,
-        output_folder: str = "output"
-    ) -> str:
-
-        Path(output_folder).mkdir(exist_ok=True)
+        self, 
+        url_qr: str
+    ) -> bytes:
 
         carnet = Image.open(
             self.TEMPLATE_BACK_PATH
         ).convert("RGBA")
 
-        qr_path = str(
-            Path(output_folder) / f"{dni}_qr.png"
+        qr_bytes = QrService.generate_qr(
+            url=url_qr
         )
 
-        QrService.generate_qr(
-            url=url_qr,
-            output_path=qr_path
-        )
-
-        qr = Image.open(qr_path).convert("RGBA")
+        qr = Image.open(
+            BytesIO(qr_bytes)
+        ).convert("RGBA")
 
         qr = self._resize_cover(
             qr,
@@ -387,15 +369,120 @@ class CarnetService:
             (
                 QR["x"],
                 QR["y"]
+            ),
+            qr
+        )
+
+        output = BytesIO()
+
+        carnet.save(
+            output,
+            format="PNG"
+        )
+
+        return output.getvalue()
+
+    def carnet_create_orchestrator  (        
+        self,
+        type_document: DocumentType,
+        number_document: str,
+        nombres: str,
+        apellidos: str,
+        nro_registro: str,
+        url_qr: str,
+        firma_bytes: bytes,
+        image_bytes: bytes) -> CarnetResponse:
+
+        carnet_front_bytes = None
+
+        if type_document == DocumentType.DNI:
+            carnet_front_bytes = self.generate(
+                dni=number_document,
+                nombres=nombres,
+                apellidos=apellidos,
+                nro_registro=nro_registro,
+                firma_bytes=firma_bytes,
+                image_bytes=image_bytes
+            )
+
+        elif type_document == DocumentType.CE:
+            carnet_front_bytes = self.generate_ce(
+                ce=number_document,
+                nombres=nombres,
+                apellidos=apellidos,
+                nro_registro=nro_registro,
+                firma_bytes=firma_bytes,
+                image_bytes=image_bytes
+            )
+
+        else:
+            raise ValueError("Tipo de documento no soportado.")
+
+        carnet_back_bytes = self.generate_back_carnet(
+            url_qr=url_qr
+        )
+
+        pdf_bytes = PdfService.generate_pdf(
+            front_image_bytes=carnet_front_bytes,
+            back_image_bytes=carnet_back_bytes
+        )
+
+        return CarnetResponse(
+            carnet = FileResponse(
+                filename=f"{number_document}_carnet.png",
+                contentType="image/png",
+                data=base64.b64encode(carnet_front_bytes).decode("utf-8")
+            ),
+            backCarnet = FileResponse(
+                filename=f"{number_document}_carnet_back.png",
+                contentType="image/png",
+                data=base64.b64encode(carnet_back_bytes).decode("utf-8")
+            ),
+            pdf = FileResponse(
+                filename=f"{number_document}_carnet.pdf",
+                contentType="application/pdf",
+                data=base64.b64encode(pdf_bytes).decode("utf-8")
             )
         )
 
-        output = str(
-            Path(output_folder) / f"{dni}_back.png"
+    def generate_carnet_preview(
+        self,
+        type_document: DocumentType,
+        number_document: str,
+        nombres: str,
+        apellidos: str,
+        firma_bytes: bytes,
+        image_bytes: bytes
+    ) -> FileResponse:
+        carnet_front_bytes = None
+
+        if type_document == DocumentType.DNI:
+            carnet_front_bytes = self.generate(
+                dni=number_document,
+                nombres=nombres,
+                apellidos=apellidos,
+                nro_registro="00000",
+                firma_bytes=firma_bytes,
+                image_bytes=image_bytes
+            )
+
+        elif type_document == DocumentType.CE:
+            carnet_front_bytes = self.generate_ce(
+                ce=number_document,
+                nombres=nombres,
+                apellidos=apellidos,
+                nro_registro="00000",
+                firma_bytes=firma_bytes,
+                image_bytes=image_bytes
+            )
+
+        else:
+            raise ValueError("Tipo de documento no soportado.")
+
+        return FileResponse(
+            filename=f"{number_document}_carnet_preview.png",
+            contentType="image/png",
+            data=base64.b64encode(carnet_front_bytes).decode("utf-8")
         )
 
-        carnet.save(output)
-
-        Path(qr_path).unlink(missing_ok=True)
-
-        return output
+        

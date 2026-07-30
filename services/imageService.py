@@ -1,17 +1,14 @@
-from pathlib import Path
+from io import BytesIO
 from PIL import Image, ImageOps
 
 
 def resize_signature(
-    input_path: str,
+    image_bytes: bytes,
     width: int,
-    height: int,
-    output_folder: str = "processed"
-) -> str:
+    height: int
+) -> bytes:
 
-    Path(output_folder).mkdir(exist_ok=True)
-
-    image = Image.open(input_path).convert("RGBA")
+    image = Image.open(BytesIO(image_bytes)).convert("RGBA")
 
     original_width, original_height = image.size
 
@@ -37,42 +34,28 @@ def resize_signature(
         (left, top, right, bottom)
     )
 
-    filename = Path(input_path).stem
+    output = BytesIO()
+    image.save(output, format="PNG")
 
-    output_path = str(
-        Path(output_folder) /
-        f"{filename}_{width}x{height}.png"
-    )
+    return output.getvalue()
 
-    image.save(output_path)
-
-    return output_path
 
 def resize_image(
-    input_path: str,
+    image_bytes: bytes,
     width: int,
-    height: int,
-    output_folder: str = "processed"
-) -> str:
+    height: int
+) -> bytes:
 
-    Path(output_folder).mkdir(exist_ok=True)
-
-    image = Image.open(input_path).convert("RGBA")
+    image = Image.open(BytesIO(image_bytes)).convert("RGBA")
 
     image = ImageOps.fit(
         image,
         (width, height),
         method=Image.Resampling.LANCZOS,
-        centering=(0.5, 0.5)  # Centro horizontal y vertical
+        centering=(0.5, 0.5)
     )
 
-    filename = Path(input_path).stem
+    output = BytesIO()
+    image.save(output, format="PNG")
 
-    output_path = str(
-        Path(output_folder) /
-        f"{filename}_{width}x{height}.png"
-    )
-
-    image.save(output_path)
-
-    return output_path
+    return output.getvalue()

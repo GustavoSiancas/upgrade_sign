@@ -1,12 +1,13 @@
 import cv2
 import numpy as np
 
-
-def upgrade_sign(input_path: str, output_path: str) -> str:
-    img = cv2.imread(input_path)
+def upgrade_sign_v1(image_bytes: bytes, format: str = ".png") -> bytes:
+    # Leer imagen desde memoria
+    nparr = np.frombuffer(image_bytes, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
     if img is None:
-        raise ValueError(f"No se pudo leer la imagen: {input_path}")
+        raise ValueError("No se pudo leer la imagen.")
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -32,11 +33,16 @@ def upgrade_sign(input_path: str, output_path: str) -> str:
         dtype=np.uint8
     )
 
+    # Negro con transparencia
     result[:, :, 0] = 0
     result[:, :, 1] = 0
     result[:, :, 2] = 0
     result[:, :, 3] = thresh
 
-    cv2.imwrite(output_path, result)
+    # Codificar en memoria
+    success, buffer = cv2.imencode(format, result)
 
-    return output_path
+    if not success:
+        raise RuntimeError("No se pudo codificar la imagen.")
+
+    return buffer.tobytes() 
