@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, Response
 
-from services.imageService import resize_image
+from services.imageService import resize_image, resize_signature
 
 router = APIRouter(
     prefix="/resize",
@@ -9,12 +9,12 @@ router = APIRouter(
 
 
 @router.post("/signature")
-async def resize_signature(
+async def resize_signature_controller(
     file: UploadFile = File(...)
 ):
     image_bytes = await file.read()
 
-    result = resize_image(
+    result = resize_signature(
         image_bytes,
         600,
         480
@@ -30,7 +30,7 @@ async def resize_signature(
 
 
 @router.post("/photo")
-async def resize_photo(
+async def resize_photo_controller(
     file: UploadFile = File(...)
 ):
     image_bytes = await file.read()

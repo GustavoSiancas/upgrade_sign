@@ -12,7 +12,8 @@ def resize_signature(
 
     original_width, original_height = image.size
 
-    scale = max(
+    # Mantener la proporción sin recortar
+    scale = min(
         width / original_width,
         height / original_height
     )
@@ -25,17 +26,21 @@ def resize_signature(
         Image.Resampling.LANCZOS
     )
 
-    left = (new_width - width) // 2
-    top = (new_height - height) // 2
-    right = left + width
-    bottom = top + height
-
-    image = image.crop(
-        (left, top, right, bottom)
+    # Crear un lienzo transparente del tamaño solicitado
+    canvas = Image.new(
+        "RGBA",
+        (width, height),
+        (0, 0, 0, 0)
     )
 
+    # Centrar la imagen
+    x = (width - new_width) // 2
+    y = (height - new_height) // 2
+
+    canvas.paste(image, (x, y), image)
+
     output = BytesIO()
-    image.save(output, format="PNG")
+    canvas.save(output, format="PNG")
 
     return output.getvalue()
 
