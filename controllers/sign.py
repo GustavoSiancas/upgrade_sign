@@ -3,7 +3,7 @@ from fastapi import APIRouter, Response, UploadFile, File
 from sign.upgradeSign_v1 import upgrade_sign_v1
 from sign.upgradeSign_v2 import upgrade_sign_v2
 from sign.upgradeSign_v3 import upgrade_sign_v3
-from services.imageService import resize_image
+from services.imageService import resize_signature
 
 
 router = APIRouter(
@@ -21,10 +21,10 @@ async def upgrade_signature(
 
     result = upgrade_sign_v1(image_bytes)
 
-    result_resized = resize_image(
+    result_resized = resize_signature(
         result,
         600,
-        400
+        480
     )
 
     return Response(
@@ -44,10 +44,10 @@ async def upgrade_signature_v2(
 
     result = upgrade_sign_v2(image_bytes)
 
-    result_resized = resize_image(
+    result_resized = resize_signature(
         result,
         600,
-        400
+        480
     )
 
     return Response(
@@ -66,10 +66,10 @@ async def upgrade_signature_v3(
 
     result = upgrade_sign_v3(image_bytes)
 
-    result_resized = resize_image(
+    result_resized = resize_signature(
         result,
         600,
-        400
+        480
     )
 
     return Response(
