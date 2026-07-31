@@ -174,6 +174,9 @@ class CarnetService:
         image_bytes: bytes
     ) -> bytes:
 
+        nombres = nombres.upper() 
+        apellidos = apellidos.upper()
+
         carnet = Image.open(
             self.TEMPLATE_DNI_PATH
         ).convert("RGBA")
@@ -261,6 +264,9 @@ class CarnetService:
         firma_bytes: bytes,
         image_bytes: bytes
     ) -> bytes:
+
+        nombres = nombres.upper()
+        apellidos = apellidos.upper()
 
         carnet = Image.open(
             self.TEMPLATE_CE_PATH
