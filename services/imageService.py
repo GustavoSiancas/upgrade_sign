@@ -2,42 +2,64 @@ from io import BytesIO
 from PIL import Image, ImageOps
 
 
+from io import BytesIO
+from PIL import Image, ImageChops
+
+
 def resize_signature(
     image_bytes: bytes,
     width: int,
-    height: int
+    height: int,
+    padding: int = 25
 ) -> bytes:
-
     image = Image.open(BytesIO(image_bytes)).convert("RGBA")
 
-    original_width, original_height = image.size
+    # Obtener el canal alfa para localizar el contenido visible.
+    alpha = image.getchannel("A")
+    bbox = alpha.getbbox()
 
-    # Mantener la proporción sin recortar
+    if bbox is None:
+        raise ValueError("La imagen no contiene una firma visible.")
+
+    # Recortar todo el espacio transparente.
+    signature = image.crop(bbox)
+
+    available_width = width - (padding * 2)
+    available_height = height - (padding * 2)
+
+    if available_width <= 0 or available_height <= 0:
+        raise ValueError(
+            "El padding es demasiado grande para las dimensiones solicitadas."
+        )
+
+    signature_width, signature_height = signature.size
+
+    # Mantener proporción usando al máximo el área disponible.
     scale = min(
-        width / original_width,
-        height / original_height
+        available_width / signature_width,
+        available_height / signature_height
     )
 
-    new_width = int(original_width * scale)
-    new_height = int(original_height * scale)
+    new_width = max(1, round(signature_width * scale))
+    new_height = max(1, round(signature_height * scale))
 
-    image = image.resize(
+    signature = signature.resize(
         (new_width, new_height),
         Image.Resampling.LANCZOS
     )
 
-    # Crear un lienzo transparente del tamaño solicitado
+    # Crear el lienzo final transparente.
     canvas = Image.new(
         "RGBA",
         (width, height),
         (0, 0, 0, 0)
     )
 
-    # Centrar la imagen
+    # Centrar la firma.
     x = (width - new_width) // 2
     y = (height - new_height) // 2
 
-    canvas.paste(image, (x, y), image)
+    canvas.alpha_composite(signature, (x, y))
 
     output = BytesIO()
     canvas.save(output, format="PNG")
