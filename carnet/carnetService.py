@@ -15,7 +15,8 @@ from .pdfService import PdfService
 from .carnetConfig import (
     PHOTO_DNI, SIGNATURE_DNI, TEXT_DNI, APELLIDOS_BOX_DNI, NOMBRES_BOX_DNI,
     PHOTO_CE, SIGNATURE_CE, TEXT_CE, APELLIDOS_BOX_CE, NOMBRES_BOX_CE,
-    FONT_SIZE, MAX_FONT_SIZE_TEXT, MIN_FONT_SIZE_TEXT, QR, FONT_SIZE_NUMBER
+    FONT_SIZE, MAX_FONT_SIZE_TEXT, MIN_FONT_SIZE_TEXT, QR, FONT_SIZE_NUMBER,
+    BACK_TEXT
 )
 
 class DocumentType(str, Enum):
@@ -348,8 +349,10 @@ class CarnetService:
 
 
     def generate_back_carnet(
-        self, 
-        url_qr: str
+        self,
+        url_qr: str,
+        n_posterior: str,
+        fecha: str
     ) -> bytes:
 
         carnet = Image.open(
@@ -379,6 +382,28 @@ class CarnetService:
             qr
         )
 
+        draw = ImageDraw.Draw(carnet)
+        try:
+            back_font = ImageFont.truetype(
+                self.FONT_PATH,
+                BACK_TEXT["font_size"]
+            )
+        except OSError:
+            back_font = ImageFont.load_default()
+
+        draw.text(
+            (BACK_TEXT["x"], BACK_TEXT["number_y"]),
+            f"N° {n_posterior}",
+            fill="black",
+            font=back_font
+        )
+        draw.text(
+            (BACK_TEXT["x"], BACK_TEXT["date_y"]),
+            fecha,
+            fill="black",
+            font=back_font
+        )
+
         output = BytesIO()
 
         carnet.save(
@@ -396,6 +421,8 @@ class CarnetService:
         apellidos: str,
         nro_registro: str,
         url_qr: str,
+        n_posterior: str,
+        fecha: str,
         firma_bytes: bytes,
         image_bytes: bytes) -> CarnetResponse:
 
@@ -425,7 +452,9 @@ class CarnetService:
             raise ValueError("Tipo de documento no soportado.")
 
         carnet_back_bytes = self.generate_back_carnet(
-            url_qr=url_qr
+            url_qr=url_qr,
+            n_posterior=n_posterior,
+            fecha=fecha
         )
 
         pdf_bytes = PdfService.generate_pdf(

@@ -25,7 +25,9 @@ async def generate_carnet(
     names: str = Form(...),
     last_names: str = Form(...),
     nro_registro: str = Form(...),
-    url_qr: str = Form(...)
+    url_qr: str = Form(...),
+    n_posterior: str = Form(...),
+    fecha: str = Form(...)
 ):
 
     photo_bytes = await photo.read()
@@ -40,6 +42,8 @@ async def generate_carnet(
         apellidos=last_names,
         nro_registro=nro_registro,
         url_qr=url_qr,
+        n_posterior=n_posterior,
+        fecha=fecha,
         firma_bytes=signature_bytes,
         image_bytes=photo_bytes
     )

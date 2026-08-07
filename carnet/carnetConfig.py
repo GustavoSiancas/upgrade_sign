@@ -81,6 +81,13 @@ QR = {
     "height": 180
 }
 
+BACK_TEXT = {
+    "x": 25,
+    "number_y": 570,
+    "date_y": 590,
+    "font_size": 14
+}
+
 # TAMAÑO DE LETRA
 
 FONT_SIZE = 30
