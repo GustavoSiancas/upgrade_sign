@@ -24,6 +24,8 @@ class CarnetRequest(BaseModel):
     names: str
     last_names: str
     nro_registro: str
+    n_posterior: str
+    fecha: str
     url_qr: str
 
 
@@ -48,6 +50,8 @@ def generate_carnet(request: CarnetRequest):
         apellidos=request.last_names,
         nro_registro=request.nro_registro,
         url_qr=request.url_qr,
+        n_posterior=request.n_posterior,
+        fecha=request.fecha,
         firma_bytes=signature_bytes,
         image_bytes=photo_bytes,
     )
