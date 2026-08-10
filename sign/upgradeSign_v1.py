@@ -2,33 +2,34 @@ import cv2
 import numpy as np
 
 def upgrade_sign_v1(image_bytes: bytes, format: str = ".png") -> bytes:
-    # Leer imagen desde memoria conservando el canal Alpha si ya lo tiene
+    # Leer imagen desde memoria conservando el canal Alpha si existe
     nparr = np.frombuffer(image_bytes, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)
 
     if img is None:
         raise ValueError("No se pudo leer la imagen.")
 
-    # CASO 1: La imagen ya tiene 4 canales (RGBA / BGRA) porque pasó por el filtro antes
-    if img.shape[2] == 4:
-        # Separar canales
-        b, g, r, alpha = cv2.split(img)
+    # 1. Verificar si la imagen tiene 3 dimensiones (alto, ancho, canales)
+    # y si efectivamente tiene 4 canales (RGBA / BGRA)
+    if len(img.shape) == 3 and img.shape[2] == 4:
+        # Extraer canal Alpha
+        alpha = img[:, :, 3]
         
-        # Opcional: limpiar un poco el canal alpha por si quedaron residuos grises
+        # Limpiar canal alpha por si tiene residuos
         _, thresh = cv2.threshold(alpha, 127, 255, cv2.THRESH_BINARY)
         
-        # Reconstruir asegurando que sea negro puro con su transparencia limpia
         result = np.zeros((img.shape[0], img.shape[1], 4), dtype=np.uint8)
-        result[:, :, 0] = 0  # B
-        result[:, :, 1] = 0  # G
-        result[:, :, 2] = 0  # R
-        result[:, :, 3] = thresh  # Alpha original limpio
+        result[:, :, 3] = thresh  # B=0, G=0, R=0 (negro), Alpha=thresh
 
-    # CASO 2: Es una imagen normal de 3 canales (RGB / BGR) por primera vez
+    # 2. Si es imagen en escala de grises (2D) o de 3 canales (RGB/BGR)
     else:
-        # Si tiene 3 canales, descartamos el canal extra si viniera en formato extraño
-        img_bgr = img[:, :, :3]
-        gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+        # Si tiene 3 canales BGR, convertir a escala de grises
+        if len(img.shape) == 3:
+            gray = cv2.cvtColor(img[:, :, :3], cv2.COLOR_BGR2GRAY)
+        else:
+            # Ya era una imagen 2D en escala de grises
+            gray = img
+
         gray = cv2.GaussianBlur(gray, (3, 3), 0)
 
         _, thresh = cv2.threshold(
@@ -45,16 +46,8 @@ def upgrade_sign_v1(image_bytes: bytes, format: str = ".png") -> bytes:
             kernel
         )
 
-        result = np.zeros(
-            (thresh.shape[0], thresh.shape[1], 4),
-            dtype=np.uint8
-        )
-
-        # Negro con transparencia
-        result[:, :, 0] = 0
-        result[:, :, 1] = 0
-        result[:, :, 2] = 0
-        result[:, :, 3] = thresh
+        result = np.zeros((thresh.shape[0], thresh.shape[1], 4), dtype=np.uint8)
+        result[:, :, 3] = thresh  # B=0, G=0, R=0 (negro), Alpha=thresh
 
     # Codificar en memoria
     success, buffer = cv2.imencode(format, result)
