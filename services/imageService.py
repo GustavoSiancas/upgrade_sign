@@ -60,8 +60,8 @@ def resize_signature(
     transparent_output = BytesIO()
     canvas.save(transparent_output, format="PNG")
 
-    # Componer la misma firma sobre blanco sin perder el resultado transparente.
-    white_canvas = Image.new("RGBA", (width, height), (255, 255, 255, 255))
+    # Componer la misma firma sobre un gris suave sin perder el resultado transparente.
+    white_canvas = Image.new("RGBA", (width, height), (245, 245, 245, 255))
     white_canvas.alpha_composite(canvas)
 
     white_output = BytesIO()
