@@ -16,8 +16,8 @@ async def resize_signature_controller(
 
     result = resize_signature(
         image_bytes,
-        600,
-        480
+        600, # Ancho máximo de la firma en el carnet
+        480  # Alto máximo de la firma en el carnet
     )
 
     return Response(
@@ -37,8 +37,8 @@ async def resize_photo_controller(
 
     result = resize_image(
         image_bytes,
-        690,
-        918
+        690, # Ancho máximo de la foto en el carnet
+        918  # Alto máximo de la foto en el carnet
     )
 
     return Response(
