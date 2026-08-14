@@ -2,16 +2,12 @@ from io import BytesIO
 from PIL import Image, ImageOps
 
 
-from io import BytesIO
-from PIL import Image, ImageChops
-
-
 def resize_signature(
     image_bytes: bytes,
     width: int,
     height: int,
     padding: int = 25
-) -> bytes:
+) -> dict[str, bytes]:
     image = Image.open(BytesIO(image_bytes)).convert("RGBA")
 
     # Obtener el canal alfa para localizar el contenido visible.
@@ -61,10 +57,20 @@ def resize_signature(
 
     canvas.alpha_composite(signature, (x, y))
 
-    output = BytesIO()
-    canvas.save(output, format="PNG")
+    transparent_output = BytesIO()
+    canvas.save(transparent_output, format="PNG")
 
-    return output.getvalue()
+    # Componer la misma firma sobre blanco sin perder el resultado transparente.
+    white_canvas = Image.new("RGBA", (width, height), (255, 255, 255, 255))
+    white_canvas.alpha_composite(canvas)
+
+    white_output = BytesIO()
+    white_canvas.convert("RGB").save(white_output, format="PNG")
+
+    return {
+        "transparent": transparent_output.getvalue(),
+        "white": white_output.getvalue()
+    }
 
 
 def resize_image(

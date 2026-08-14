@@ -1,3 +1,5 @@
+import base64
+
 from fastapi import APIRouter, UploadFile, File, Response
 
 from services.imageService import resize_image, resize_signature
@@ -20,13 +22,10 @@ async def resize_signature_controller(
         480  # Alto máximo de la firma en el carnet
     )
 
-    return Response(
-        content=result,
-        media_type="image/png",
-        headers={
-            "Content-Disposition": "inline; filename=signature.png"
-        }
-    )
+    return {
+        "transparent": base64.b64encode(result["transparent"]).decode("ascii"),
+        "white": base64.b64encode(result["white"]).decode("ascii")
+    }
 
 
 @router.post("/photo")
