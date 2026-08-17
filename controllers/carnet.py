@@ -12,7 +12,6 @@ router = APIRouter(
     tags=["Carnet"]
 )
 
-
 @router.post(
     "",
     response_model=CarnetResponse

@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from services.downloadImage import DownloadImageService
 
 from carnet.carnetService import (
+    CarnetResponseSides,
     CarnetService,
     CarnetResponse,
     DocumentType,
@@ -11,8 +12,8 @@ from carnet.carnetService import (
 )
 
 router = APIRouter(
-    prefix="/carnet-urb",
-    tags=["Carnet-urb"]
+    prefix="/carnet-link",
+    tags=["Carnet-Link"]
 )
 
 
@@ -44,6 +45,42 @@ def generate_carnet(request: CarnetRequest):
     signature_bytes = DownloadImageService.download_as_png_bytes(request.signature_url)
 
     return CarnetService().carnet_create_orchestrator(
+        type_document=request.type_document,
+        number_document=request.number_document,
+        nombres=request.names,
+        apellidos=request.last_names,
+        nro_registro=request.nro_registro,
+        url_qr=request.url_qr,
+        n_posterior=request.n_posterior,
+        fecha=request.fecha,
+        firma_bytes=signature_bytes,
+        image_bytes=photo_bytes,
+    )
+
+@router.post("/front-back", response_model=CarnetResponseSides)
+def generate_front_back_carnet(request: CarnetRequest):
+    photo_bytes = DownloadImageService.download_as_png_bytes(request.photo_url)
+    signature_bytes = DownloadImageService.download_as_png_bytes(request.signature_url)
+
+    return CarnetService().generate_front_back_carnet(
+        type_document=request.type_document,
+        number_document=request.number_document,
+        nombres=request.names,
+        apellidos=request.last_names,
+        nro_registro=request.nro_registro,
+        url_qr=request.url_qr,
+        n_posterior=request.n_posterior,
+        fecha=request.fecha,
+        firma_bytes=signature_bytes,
+        image_bytes=photo_bytes,
+    )
+
+@router.post("/pdf", response_model=FileResponse)
+def generate_pdf_carnet(request: CarnetRequest):
+    photo_bytes = DownloadImageService.download_as_png_bytes(request.photo_url)
+    signature_bytes = DownloadImageService.download_as_png_bytes(request.signature_url)
+
+    return CarnetService().generate_carnet_pdf(
         type_document=request.type_document,
         number_document=request.number_document,
         nombres=request.names,

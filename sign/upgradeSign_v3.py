@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 
-
 def upgrade_sign_v3(image_bytes: bytes, format: str = ".png") -> bytes:
     # 1. Leer imagen en memoria conservando el canal Alpha si ya existía
     nparr = np.frombuffer(image_bytes, np.uint8)

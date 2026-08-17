@@ -34,6 +34,10 @@ class CarnetResponse(BaseModel):
     backCarnet: FileResponse
     pdf: FileResponse
 
+class CarnetResponseSides(BaseModel):
+    front_carnet: FileResponse
+    back_carnet: FileResponse
+
 class CarnetService:
     TEMPLATE_DNI_PATH = "assets/dni_template.png"
     TEMPLATE_CE_PATH = "assets/ce_template.png"
@@ -163,7 +167,6 @@ class CarnetService:
             fill=fill,
             font=font
         )
-
 
     def generate(
         self,
@@ -347,7 +350,6 @@ class CarnetService:
 
         return output.getvalue()
 
-
     def generate_back_carnet(
         self,
         url_qr: str,
@@ -520,4 +522,116 @@ class CarnetService:
             data=base64.b64encode(carnet_front_bytes).decode("utf-8")
         )
 
-        
+    def generate_front_back_carnet(
+        self,
+        type_document: DocumentType,
+        number_document: str,
+        nombres: str,
+        apellidos: str,
+        nro_registro: str,
+        url_qr: str,
+        n_posterior: str,
+        fecha: str,
+        firma_bytes: bytes,
+        image_bytes: bytes
+    ) -> CarnetResponseSides:
+
+        carnet_front_bytes = None
+
+        if type_document == DocumentType.DNI:
+            carnet_front_bytes = self.generate(
+                dni=number_document,
+                nombres=nombres,
+                apellidos=apellidos,
+                nro_registro=nro_registro,
+                firma_bytes=firma_bytes,
+                image_bytes=image_bytes
+            )
+
+        elif type_document == DocumentType.CE:
+            carnet_front_bytes = self.generate_ce(
+                ce=number_document,
+                nombres=nombres,
+                apellidos=apellidos,
+                nro_registro=nro_registro,
+                firma_bytes=firma_bytes,
+                image_bytes=image_bytes
+            )
+
+        else:
+            raise ValueError("Tipo de documento no soportado.")
+
+        carnet_back_bytes = self.generate_back_carnet(
+            url_qr=url_qr,
+            n_posterior=n_posterior,
+            fecha=fecha
+        )
+
+        return CarnetResponseSides(
+            front_carnet = FileResponse(
+                filename=f"{number_document}_carnet.png",
+                contentType="image/png",
+                data=base64.b64encode(carnet_front_bytes).decode("utf-8")
+            ),
+            back_carnet = FileResponse(
+                filename=f"{number_document}_carnet_back.png",
+                contentType="image/png",
+                data=base64.b64encode(carnet_back_bytes).decode("utf-8")
+            )
+        )    
+
+    def generate_carnet_pdf(
+        self,
+        type_document: DocumentType,
+        number_document: str,
+        nombres: str,
+        apellidos: str,
+        nro_registro: str,
+        url_qr: str,
+        n_posterior: str,
+        fecha: str,
+        firma_bytes: bytes,
+        image_bytes: bytes       
+    ):
+
+        carnet_front_bytes = None
+
+        if type_document == DocumentType.DNI:
+            carnet_front_bytes = self.generate(
+                dni=number_document,
+                nombres=nombres,
+                apellidos=apellidos,
+                nro_registro=nro_registro,
+                firma_bytes=firma_bytes,
+                image_bytes=image_bytes
+            )
+
+        elif type_document == DocumentType.CE:
+            carnet_front_bytes = self.generate_ce(
+                ce=number_document,
+                nombres=nombres,
+                apellidos=apellidos,
+                nro_registro=nro_registro,
+                firma_bytes=firma_bytes,
+                image_bytes=image_bytes
+            )
+
+        else:
+            raise ValueError("Tipo de documento no soportado.")
+
+        carnet_back_bytes = self.generate_back_carnet(
+            url_qr=url_qr,
+            n_posterior=n_posterior,
+            fecha=fecha
+        )
+
+        pdf_bytes = PdfService.generate_pdf(
+            front_image_bytes=carnet_front_bytes,
+            back_image_bytes=carnet_back_bytes
+        )
+
+        return FileResponse(
+            filename=f"{number_document}_carnet.pdf",
+            contentType="application/pdf",
+            data=base64.b64encode(pdf_bytes).decode("utf-8")
+        )
