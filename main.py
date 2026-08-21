@@ -6,6 +6,7 @@ from controllers.sign import router as sign_router
 from controllers.resize_images import router as resize_router
 from controllers.carnet_urb import router as carnet_urb_router
 from controllers.carnet import router as carnet_router
+from controllers.signerVeronicaQuispe import router as signer_veronica_quispe_router
 
 app = FastAPI(
     title="Upgrade Sign API",
@@ -24,3 +25,4 @@ app.include_router(sign_router)
 app.include_router(resize_router)
 app.include_router(carnet_router)
 app.include_router(carnet_urb_router)
+app.include_router(signer_veronica_quispe_router)
